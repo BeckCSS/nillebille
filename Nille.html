@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- Hvis du læser det her, så vil jeg bare sige, at du er mega dejlig :) -->
+    <!-- Jeg vil anbefale at kigge i <script></script> -->
+    <!-- Ik' bliv skræmt; gå gennem koden linje efter linje ;) -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DU SØD HEHE</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            background-color: #000;
+            color: #33ff00;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            width: 85%;
+            max-width: 500px;
+            z-index: 10;
+        }
+
+        .hint {
+            font-size: 15px;
+            color: #ffffff;
+            margin-top: 8px;
+            font-style: italic;
+            opacity: 0.7;
+        }
+
+        #face-id-container {
+            display: none; 
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .face-icon {
+            width: 60px;
+            height: 60px;
+            border: 3px solid #33ff00;
+            border-radius: 15px;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(51, 255, 0, 0.3);
+        }
+
+        .lock-body {
+            width: 20px;
+            height: 16px;
+            background: #33ff00;
+            border-radius: 3px;
+            position: relative;
+            top: 5px;
+        }
+        .lock-shackle {
+            width: 12px;
+            height: 12px;
+            border: 3px solid #33ff00;
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            position: absolute;
+            top: -12px;
+            left: 1px;
+            transform-origin: bottom right;
+            transition: transform 0.5s ease;
+        }
+
+        .scanning {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(51,255,0,0.2); }
+            50% { box-shadow: 0 0 25px rgba(51,255,0,0.8); }
+            100% { box-shadow: 0 0 10px rgba(51,255,0,0.2); }
+        }
+
+        .unlocked .lock-shackle {
+            transform: rotate(-45deg) translateY(-2px);
+        }
+        
+        .unlocked {
+            border-color: #33ff00;
+            animation: none;
+        }
+
+        .log-line {
+            opacity: 0;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.1s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        #input-area {
+            display: none; 
+            margin-top: 30px;
+            border-top: 1px dashed #33ff00;
+            padding-top: 15px;
+        }
+
+        input[type="text"] {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #33ff00;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            width: 100%;
+            outline: none;
+            text-transform: uppercase;
+            padding: 5px 0;
+            margin-top: 10px;
+        }
+
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        #success-screen {
+            display: none;
+            text-align: center;
+            color: white;
+        }
+        .heart-beat {
+            font-size: 3rem;
+            color: red;
+            animation: beat 0.8s infinite alternate;
+        }
+        @keyframes beat { to { transform: scale(1.1); } }
+
+        .letter-content {
+            font-family: 'Courier New', Courier, monospace;
+            line-height: 1.6;
+            font-size: 14px;
+            text-align: left;
+            background: rgba(20, 20, 20, 0.8);
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .photo-btn {
+            display: inline-block;
+            background-color: transparent;
+            color: #33ff00;
+            border: 2px solid #33ff00;
+            padding: 15px 30px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(51, 255, 0, 0.2);
+            margin-top: 10px;
+            margin-bottom: 40px;
+        }
+
+        .photo-btn:hover {
+            background-color: #33ff00;
+            color: black;
+            box-shadow: 0 0 25px rgba(51, 255, 0, 0.8);
+        }
+    </style>
+</head>
+<body class="crt">
+
+    <div class="container" id="boot-screen">
+        <div id="logs"></div> <div id="face-id-container">
+            <div class="face-icon scanning" id="face-icon">
+                <div class="lock-body">
+                    <div class="lock-shackle" id="shackle"></div>
+                </div>
+            </div>
+            <p style="font-size: 12px; margin-top: 10px;" id="face-text">SCANNER FACE ID...</p>
+        </div>
+
+        <div id="input-area">
+            <p>> SKRIV DEKRYPTERINGSNØGLE:</p>
+            <input type="text" id="passwordInput" placeholder="SKRIV HER..." autocomplete="off">
+            <p class="hint">Hint: Kopier linket til din computer og tryk F12 for at se koden ;)</p>
+            <p id="error-msg" style="color: red; display: none; font-size: 12px; margin-top: 10px;">>FORKERT NØGLE.</p>
+        </div>
+    </div>
+
+    <div class="container" id="success-screen">
+    <h1 style="border-bottom: 2px solid white; padding-bottom:10px; color: #33ff00;">ADGANG GODKENDT</h1>
+    
+    <div class="letter-content">
+        <p><strong>Hej søde,</strong></p>
+        <br>
+        <p>Jeg håber ikke, det var for svært at komme ind hehe. Du er mega sød og sej, så jeg var sikker på, at du kunne løse det.</p>
+        <br>
+        <p>Verden er et meget bedre sted, når jeg er sammen med dig. Selvom vi ikke ses så meget for tiden, så håber jeg virkelig, at du ved, at jeg tænker på dig riiiimelig tit.</p>
+        <br>
+        <p>Alt stress ryger ud af kroppen, når jeg er med dig. Du får mig til at være en bedre version af mig selv - lidt cliché, I know - men det er virkelig sådan, jeg har det! Det er også derfor, jeg ved, at du er den, jeg skal være sammen med.</p>
+        <br>
+        <p>Jeg håber, du kan lide gaven.</p>
+        <br>
+        <p>- Rejen <3</p>
+    </div>
+
+    <div class="heart-beat">❤️</div>
+
+    <p style="font-size: 12px; color: #aaa; margin-bottom: 10px;">En samling af os:</p>
+    
+    <div style="border: 1px dashed #33ff00; padding: 15px; color: #33ff00; font-size: 14px; margin-bottom: 40px; background: rgba(0,50,0,0.3);">
+        > Skriv til mig, så tilføjer jeg dig til albummet :) <
+    </div>
+</div>
+
+    <script>
+        const logsDiv = document.getElementById('logs');
+        const faceContainer = document.getElementById('face-id-container');
+        const faceIcon = document.getElementById('face-icon');
+        const shackle = document.getElementById('shackle');
+        const faceText = document.getElementById('face-text');
+        const inputArea = document.getElementById('input-area');
+        const input = document.getElementById('passwordInput');
+        const validCodes = ["JEGELSKERDIG", "JEG ELSKER DIG"];
+
+        const bootSequence = [
+            { text: "> SYSTEM STARTER...", delay: 500 },
+            { text: "> ETABLERER SIKKER FORBINDELSE...", delay: 1200 },
+            { text: "> STARTER SCANNING...", delay: 800 }
+        ];
+
+        let step = 0;
+
+        function runBoot() {
+            if (step < bootSequence.length) {
+                const p = document.createElement('p');
+                p.className = 'log-line fade-in';
+                p.textContent = bootSequence[step].text;
+                logsDiv.appendChild(p);
+                
+                if (bootSequence[step].text.includes("SCANNING")) {
+                    setTimeout(triggerFaceID, 1000);
+                } else {
+                    setTimeout(runBoot, bootSequence[step].delay);
+                }
+                step++;
+            }
+        }
+
+        function triggerFaceID() {
+            faceContainer.style.display = 'block';
+            
+            setTimeout(() => {
+                faceIcon.classList.remove('scanning');
+                faceIcon.classList.add('unlocked');
+                faceText.textContent = "BRUGER VERIFICERET";
+                faceText.style.color = "#33ff00";
+                
+                const p = document.createElement('p');
+                p.className = 'log-line fade-in';
+                p.style.color = "#33ff00";
+                p.textContent = "> SCANNING: MATCH FUNDET";
+                logsDiv.appendChild(p);
+
+                setTimeout(() => {
+                    inputArea.style.display = 'block';
+                    input.focus();
+                }, 800);
+
+            }, 2000);
+        }
+
+        window.onload = runBoot;
+        
+        input.addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                let attempt = input.value.toUpperCase().trim();
+                if (validCodes.includes(attempt)) {
+                    document.getElementById('boot-screen').style.display = 'none';
+                    document.getElementById('success-screen').style.display = 'block';
+
+                    triggerConfetti();
+
+                    document.body.style.overflowY = "auto";
+                    document.body.style.height = "auto";
+                    document.body.style.minHeight = "100vh";
+                    document.body.style.alignItems = "flex-start";
+                    document.body.style.padding = "50px 0";
+                } else {
+                    document.getElementById('error-msg').style.display = 'block';
+                    input.value = "";
+                }
+            }
+        });
+
+        function triggerConfetti() {
+            var duration = 3000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+    </script>
+</body>
+</html>
